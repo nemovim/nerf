@@ -39,13 +39,37 @@ class Embedder:
                 out_dim += d
                     
         self.embed_fns = embed_fns
-        self.out_dim = out_dim
+
+        # Change 0 by Chan
+
+        if self.kwargs['is_pos']:
+            self.out_dim = out_dim+1
+        else:
+            self.out_dim = out_dim
+
+        # self.out_dim = out_dim
+
+        # ----------------------------
         
     def embed(self, inputs):
-        return torch.cat([fn(inputs) for fn in self.embed_fns], -1)
 
+        # Change 1 by Chan
 
-def get_embedder(multires, i=0):
+        if self.kwargs['is_pos']:
+            temp = inputs[:, -1:]
+            real_inputs = inputs[:, :-1]
+
+            return torch.concat((torch.cat([fn(real_inputs) for fn in self.embed_fns], -1), temp), 1)
+        else:
+            return torch.cat([fn(inputs) for fn in self.embed_fns], -1)
+
+        # return torch.cat([fn(inputs) for fn in self.embed_fns], -1)
+
+        # -----------------------------------
+
+# Change -2 by Chan
+def get_embedder(multires, i=0, isPos=None):
+# def get_embedder(multires, i=0):
     if i == -1:
         return nn.Identity(), 3
     
@@ -56,6 +80,8 @@ def get_embedder(multires, i=0):
                 'num_freqs' : multires,
                 'log_sampling' : True,
                 'periodic_fns' : [torch.sin, torch.cos],
+                # Change -1 by Chan
+                'is_pos': isPos
     }
     
     embedder_obj = Embedder(**embed_kwargs)
